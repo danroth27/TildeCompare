@@ -11,32 +11,48 @@ the documentation code samples filtered out.
 
 | # | Source                                           | Rendered                                                | Notes                                                                |
 |---|--------------------------------------------------|----------------------------------------------------------|----------------------------------------------------------------------|
-| 1 | `<img src="~/images/logo.png">`                  | `src="/myapp/images/logo.4lpusj3pde.png"`               | PathBase **and** fingerprint. (img is in URL-resolution allowlist; the image tag helper fingerprints.) |
-| 2 | `<link href="~/css/site.css">`                   | `href="/myapp/css/site.kel539m53m.css"`                 | PathBase + fingerprint (link tag helper).                            |
-| 3 | `<script src="~/js/site.js">`                    | `src="/myapp/js/site.z3qhkpazfp.js"`                    | PathBase + fingerprint (script tag helper).                          |
-| 4 | `<a href="~/images/logo.png">`                   | `href="/myapp/images/logo.4lpusj3pde.png"`              | PathBase + fingerprint (anchor tag helper resolves and fingerprints when target is in static asset manifest). |
-| 5 | `<a href="~/counter">`                           | `href="/myapp/counter"`                                 | PathBase only. Page route, not a static asset.                       |
-| 6 | `<a href="~/Compare?x=1">`                       | `href="/myapp/Compare?x=1"`                             | PathBase only.                                                       |
+| 1 | `<img src="~/images/logo.png">`                  | `src="/myapp/images/logo.4lpusj3pde.png"`               | PathBase **and** fingerprint, both applied by `UrlResolutionTagHelper` itself. |
+| 2 | `<link href="~/css/site.css">`                   | `href="/myapp/css/site.kel539m53m.css"`                 | Same.                                                                 |
+| 3 | `<script src="~/js/site.js">`                    | `src="/myapp/js/site.z3qhkpazfp.js"`                    | Same.                                                                 |
+| 4 | `<a href="~/images/logo.png">`                   | `href="/myapp/images/logo.4lpusj3pde.png"`              | Same. Anchors are in the allowlist, so the static-asset target gets fingerprinted too. |
+| 5 | `<a href="~/counter">`                           | `href="/myapp/counter"`                                 | PathBase only. `counter` is not a key in the static-asset manifest, so `ResourceAssetCollection["counter"]` returns the key unchanged and no fingerprinting happens. |
+| 6 | `<a href="~/Compare?x=1">`                       | `href="/myapp/Compare?x=1"`                             | PathBase only. `Compare?x=1` is taken as the asset key (the tag helper does not split the query) — no manifest hit, no fingerprint. |
 | 7 | `<form action="~/Submit">`                       | `action="/myapp/Submit"`                                | PathBase only.                                                       |
-| 8 | `<source srcset="~/a.png 1x, ~/b.png 2x">`       | `srcset="/myapp/a.png 1x, ~/b.png 2x"` ⚠️                | **Only the first `~/` resolves.** UrlResolutionTagHelper doesn't parse srcset; this is a long-standing limitation. |
-| 9 | `<div title="~/foo">`                            | `title="~/foo"`                                         | Pass-through; `title` is not in the allowlist.                       |
-| 10| `<div data-url="~/foo">`                         | `data-url="~/foo"`                                      | Pass-through; arbitrary attribute names are not in the allowlist.    |
-| 11| `@Url.Content("~/images/logo.png")`              | `/myapp/images/logo.png`                                | PathBase only (no fingerprinting in `Url.Content`).                  |
+| 8 | `<source srcset="~/a.png 1x, ~/b.png 2x">`       | `srcset="/myapp/a.png 1x, ~/b.png 2x"` ⚠️                | **Only the first `~/` resolves.** `TryCreateTrimmedString` requires the whole attribute value to start with `~/`; the comma-separated tail is left alone. Long-standing behavior. |
+| 9 | `<div title="~/foo">`                            | `title="~/foo"`                                         | Pass-through; `title` is not in any allowlisted element+attribute pair. |
+| 10| `<div data-url="~/foo">`                         | `data-url="~/foo"`                                      | Pass-through; arbitrary attribute names aren't in the allowlist.     |
+| 11| `@Url.Content("~/images/logo.png")`              | `/myapp/images/logo.png`                                | PathBase only. `Url.Content` doesn't consult the asset manifest. To fingerprint here you need `asp-append-version="true"` or use the tag helper. |
 | 12| `@Url.Content("~/counter")`                      | `/myapp/counter`                                        | PathBase only.                                                       |
-| 13| Partial: `<img src="~/images/logo.png">`         | `src="/myapp/images/logo.4lpusj3pde.png"`               | Tag helper runs inside partials (literal source).                    |
-| 14| ViewComponent: `<img src="@Model.Source">` where `Model.Source = "~/images/logo.png"` | `src="~/images/logo.png"` ⚠️ | **`~/` does NOT resolve when the value comes from a C# expression.** The URL-resolution tag helper only fires on *literal* `~/` in the .cshtml source. |
+| 13| Partial: `<img src="~/images/logo.png">`         | `src="/myapp/images/logo.4lpusj3pde.png"`               | Tag helper runs inside partials (the literal `~/` is in the partial's `.cshtml` source). |
+| 14| ViewComponent: `<img src="@Model.Source">` where `Model.Source = "~/images/logo.png"` | `src="~/images/logo.png"` ⚠️ | **`~/` does NOT resolve when the value comes from a C# expression.** This is enforced by the Razor compiler's tag-helper matching (`[src^='~/']`), not by a runtime branch in the tag helper — the helper is never even applied to attributes whose syntactic value doesn't start with `~/`. |
 
-### The core MVC rules — derived from this matrix
+### The core MVC rules — derived from this matrix *and* the source
 
-1. `~/` is a **static, syntactic** feature: it fires only when the literal
-   text `~/...` appears as an attribute value in the `.cshtml` source.
-   Runtime strings that happen to start with `~/` are *not* re-resolved.
-2. It applies on an **attribute allowlist** (UrlResolutionTagHelper:
-   `src, href, action, formaction, cite, data, poster, srcset, archive, icon, manifest, itemid`).
-3. The expansion **always prepends PathBase**, producing a root-relative absolute URL.
-4. **Fingerprinting** is an *additional* opt-in that link/script/image/anchor
-   tag helpers layer on top — only when the resolved target is in the static
-   asset manifest.
+1. `~/` is a **static, syntactic** feature: it only applies when the literal
+   text `~/...` appears as an attribute value in the `.cshtml` source. The
+   gate is the tag-helper matcher `[<attr>^='~/']` in the
+   `UrlResolutionTagHelper` `[HtmlTargetElement]` attributes; that is a
+   Razor-compile-time predicate, so runtime strings that happen to start
+   with `~/` are never re-resolved.
+2. It applies on an **element+attribute allowlist** (see
+   `src/Mvc/Mvc.Razor/src/TagHelpers/UrlResolutionTagHelper.cs`). Notable
+   pairs: `a/href`, `area/href`, `audio/src`, `form/action`, `img/src`,
+   `img/srcset`, `link/href`, `script/src`, `source/src`, `source/srcset`,
+   `video/src`, `video/poster`, `iframe/src`, `embed/src`, `track/src`,
+   `input/src`, `input/formaction`, `button/formaction`,
+   `blockquote/cite`, `q/cite`, `del/cite`, `ins/cite`, `object/data`,
+   `object/archive`, `applet/archive`, `html/manifest`, `menuitem/icon`,
+   `base/href`, plus `itemid` on **any** element.
+3. The expansion **always prepends PathBase** via `IUrlHelper.Content(...)`,
+   producing a root-relative absolute URL.
+4. **Fingerprinting** is performed by `UrlResolutionTagHelper.GetVersionedResourceUrl`,
+   which reads the `ResourceAssetCollection` from the current endpoint's
+   metadata (same collection Blazor's `Assets[]` uses). If the asset
+   substring after `~/` is a key in the manifest, the URL is rewritten to
+   the fingerprinted name *before* PathBase is prepended; otherwise the
+   key passes through. Same code path for `<img>`, `<a>`, `<link>`,
+   `<script>`, etc. — there are no separate per-element fingerprinting
+   helpers in 9.0+.
 5. `Url.Content("~/...")` is the programmatic escape hatch — PathBase only,
    no fingerprinting.
 
@@ -64,7 +80,12 @@ All three render modes produced **identical** prerendered HTML:
 1. `~/` is **never** processed by Razor. It's just text.
 2. `@Assets[key]` is fingerprinting only — **no PathBase**. Output is
    base-href-relative.
-3. `Assets[key]` for an unknown key returns the key. Quiet failure mode.
+3. **`Assets[]` returns the key on miss.** `ResourceAssetCollection`'s
+   indexer is literally
+   `_uniqueUrlMappings.TryGetValue(key, out var value) ? value.Url : key`
+   — no exception, no fallback log. This is intentional, but it means
+   any tooling that wants to flag "you wrote `@Assets[\"counter\"]` but
+   `counter` isn't a static asset" has to do that work itself.
 4. Component parameters carry strings unchanged — no implicit transformation
    at either call site or callee.
 
@@ -137,12 +158,18 @@ If we shipped Option A (compile-time `"~/x"` → `Assets["x"]` on any attribute)
   component params + programmatic (`Url.Content`, `Nav.ToAbsoluteUri`,
   `Assets[]`) + View Component (MVC) + Partial (MVC).
 
-To reproduce:
+## Source references
 
-```pwsh
-cd D:\Copilot\TildeCompare
-dotnet run --project TildeCompare --launch-profile http
-# then curl http://localhost:5095/myapp/Compare etc.
-```
+Cross-checked against `dotnet/aspnetcore` `main`:
 
-Snapshots of all surfaces are in `D:\Copilot\TildeCompare\snapshots\`.
+- `src/Mvc/Mvc.Razor/src/TagHelpers/UrlResolutionTagHelper.cs` — the
+  `[HtmlTargetElement(... Attributes = "[<attr>^='~/']")]` directives
+  define the element+attribute matrix, `TryCreateTrimmedString` enforces
+  the leading-`~/`-only behavior, `GetVersionedResourceUrl` performs
+  fingerprinting against `ResourceAssetCollection` *before* PathBase is
+  prepended via `IUrlHelper.Content`.
+- `src/Components/Components/src/ResourceAssetCollection.cs` — the
+  indexer returns the key unchanged on miss; the same instance is
+  exposed to both MVC (via endpoint metadata) and Blazor (via the Razor
+  compiler's `Assets` cascading).
+
