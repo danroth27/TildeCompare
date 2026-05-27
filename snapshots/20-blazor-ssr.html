@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/myapp/" />
+    
+    <link rel="stylesheet" href="app.4kywy7iv6g.css" />
+    <link rel="stylesheet" href="css/site.kel539m53m.css" />
+    <link rel="stylesheet" href="TildeCompare.2inivypa1t.styles.css" />
+    <script type="importmap">{
+  "imports": {
+    "./Components/Layout/ReconnectModal.razor.js": "./Components/Layout/ReconnectModal.abdmv1u4y3.razor.js",
+    "./_framework/Microsoft.DotNet.HotReload.WebAssembly.Browser.lib.module.js": "./_framework/Microsoft.DotNet.HotReload.WebAssembly.Browser.99zm1jdh75.lib.module.js",
+    "./_framework/blazor.server.js": "./_framework/blazor.server.cj5793hgrt.js",
+    "./_framework/blazor.web.js": "./_framework/blazor.web.ej96puwv3k.js",
+    "./_framework/dotnet.js": "./_framework/dotnet.6q3u0j5d96.js",
+    "./_framework/dotnet.native.js": "./_framework/dotnet.native.rjbmzc4jpg.js",
+    "./_framework/dotnet.runtime.js": "./_framework/dotnet.runtime.r2kbxkuujc.js",
+    "./js/site.js": "./js/site.z3qhkpazfp.js",
+    "_framework/resource-collection.js": "./_framework/resource-collection.6UwHM.js",
+    "_framework/resource-collection.js.gz": "./_framework/resource-collection.6UwHM.js.gz"
+  },
+  "integrity": {
+    "./_framework/resource-collection.6UwHM.js": "sha256-qMFXJMnfuCj/1Tsy6ngqtImQCRzq1Z5JPWvZ2S73qeo=",
+    "./_framework/resource-collection.6UwHM.js.gz": "sha256-qMFXJMnfuCj/1Tsy6ngqtImQCRzq1Z5JPWvZ2S73qeo="
+  }
+}</script>
+    </head>
+
+<body><h1>Blazor static SSR — <code>@Assets[]</code> vs <code>~/</code></h1>
+<p><a href="../">&larr; back</a></p>
+
+<p>Mode: <span class="label">Static SSR</span> &#xA0; NavigationManager.BaseUri: <code>http://localhost:5095/myapp/</code></p>
+
+<h2>1. Static asset URLs — same attribute names MVC's allowlist targets</h2>
+
+<h3>1a. <code>&lt;img src="~/images/logo.png"&gt;</code> (literal)</h3>
+<div class="row">Rendered: <img src="~/images/logo.png" alt="literal"></div>
+
+<h3>1b. <code>&lt;img src="@Assets["images/logo.png"]"&gt;</code></h3>
+<div class="row">Rendered: <img src="images/logo.4lpusj3pde.png" alt="Assets" /></div>
+
+<h3>1c. <code>&lt;script src="@Assets["js/site.js"]"&gt;</code></h3>
+<script src="js/site.z3qhkpazfp.js"></script>
+
+<h3>1d. <code>&lt;source srcset="@Assets["images/logo.png"] 1x, @Assets["images/logo-2x.png"] 2x"&gt;</code></h3>
+<div class="row"><picture><source srcset="images/logo.4lpusj3pde.png 1x, images/logo-2x.vsjc638qxn.png 2x" />
+    <img src="images/logo.4lpusj3pde.png" alt="logo" /></picture></div>
+
+<h3>1e. <code>&lt;form action="~/Submit"&gt;</code> (literal)</h3>
+<form action="~/Submit" method="post"><input type="submit" value="literal-submit"></form>
+
+<h2>2. Page route targets — Assets[] has no entry for these</h2>
+
+<h3>2a. <code>&lt;a href="~/counter"&gt;</code> (literal — Blazor today)</h3>
+<div class="row"><a href="~/counter">literal href</a></div>
+
+<h3>2b. <code>&lt;a href="counter"&gt;</code> (base-relative — typical Blazor pattern)</h3>
+<div class="row"><a href="counter">base-relative href</a></div>
+
+<h3>2c. <code>&lt;a href="@Nav.ToAbsoluteUri("counter")"&gt;</code> (programmatic absolute)</h3>
+<div class="row"><a href="http://localhost:5095/myapp/counter">absolute href</a></div>
+
+<h3>2d. <code>&lt;a href="@Assets["counter"]"&gt;</code> — what would this do?</h3>
+<div class="row">  Result: <code>counter</code></div>
+
+<h2>3. Non-URL attributes</h2>
+
+<h3>3a. <code>&lt;div title="~/foo"&gt;</code> (literal)</h3>
+<div class="row"><div title="~/foo">hover — title literal</div></div>
+
+<h3>3b. <code>&lt;div data-url="~/foo"&gt;</code> (literal)</h3>
+<div class="row"><div data-url="~/foo">data-url literal</div></div>
+
+<h2>4. Component parameters</h2>
+
+<h3>4a. <code>&lt;AssetCard Source="~/images/logo.png" Route="~/counter" Title="~/foo" /&gt;</code></h3>
+<div class="row" style="border:1px dashed #999;padding:8px;margin:6px 0"><strong>AssetCard received:</strong>
+  Source=<code>~/images/logo.png</code>,
+  Route=<code>~/counter</code>,
+  Title=<code>~/foo</code>
+  <br>
+  Re-emitted via <code>&lt;img src="@Source"&gt;</code>:
+  <img src="~/images/logo.png" alt="from component" />
+  <br>
+  Re-emitted via <code>&lt;a href="@Route"&gt;</code>:
+  <a href="~/counter">link</a>
+  <br>
+  Re-emitted via <code>&lt;div title="@Title"&gt;</code>:
+  <div title="~/foo">hover</div></div>
+
+<h3>4b. <code>&lt;AssetCard Source="@Assets["images/logo.png"]" Route="counter" /&gt;</code></h3>
+<div class="row" style="border:1px dashed #999;padding:8px;margin:6px 0"><strong>AssetCard received:</strong>
+  Source=<code>images/logo.4lpusj3pde.png</code>,
+  Route=<code>counter</code>,
+  Title=<code>just a title</code>
+  <br>
+  Re-emitted via <code>&lt;img src="@Source"&gt;</code>:
+  <img src="images/logo.4lpusj3pde.png" alt="from component" />
+  <br>
+  Re-emitted via <code>&lt;a href="@Route"&gt;</code>:
+  <a href="counter">link</a>
+  <br>
+  Re-emitted via <code>&lt;div title="@Title"&gt;</code>:
+  <div title="just a title">hover</div></div>
+
+<h3>4c. <code>&lt;NavLink href="~/counter"&gt;</code> (literal)</h3>
+<div class="row"><a href="~/counter">NavLink literal</a></div>
+
+<h3>4d. <code>&lt;NavLink href="counter"&gt;</code> (base-relative, idiomatic Blazor)</h3>
+<div class="row"><a href="counter">NavLink base-relative</a></div>
+
+<div id="blazor-error-ui" data-nosnippet b-qritntopi6>
+    An unhandled error has occurred.
+    <a href="." class="reload" b-qritntopi6>Reload</a>
+    <span class="dismiss" b-qritntopi6>🗙</span></div>
+        <blazor-focus-on-navigate selector="h1"></blazor-focus-on-navigate>
+    <script type="module" src="Components/Layout/ReconnectModal.abdmv1u4y3.razor.js" b-nybq31t5se></script>
+
+<dialog id="components-reconnect-modal" data-nosnippet b-nybq31t5se><div class="components-reconnect-container" b-nybq31t5se><div class="components-rejoining-animation" aria-hidden="true" b-nybq31t5se><div b-nybq31t5se></div>
+            <div b-nybq31t5se></div></div>
+        <p class="components-reconnect-first-attempt-visible" b-nybq31t5se>
+            Rejoining the server...
+        </p>
+        <p class="components-reconnect-repeated-attempt-visible" b-nybq31t5se>
+            Rejoin failed... trying again in <span id="components-seconds-to-next-attempt" b-nybq31t5se></span> seconds.
+        </p>
+        <p class="components-reconnect-failed-visible" b-nybq31t5se>
+            Failed to rejoin.<br b-nybq31t5se>Please retry or reload the page.
+        </p>
+        <button id="components-reconnect-button" class="components-reconnect-failed-visible" b-nybq31t5se>
+            Retry
+        </button>
+        <p class="components-pause-visible" b-nybq31t5se>
+            The session has been paused by the server.
+        </p>
+        <p class="components-resume-failed-visible" b-nybq31t5se>
+            Failed to resume the session.<br b-nybq31t5se>Please retry or reload the page.
+        </p>
+        <button id="components-resume-button" class="components-pause-visible components-resume-failed-visible" b-nybq31t5se>
+            Resume
+        </button></div></dialog>
+    <script src="_framework/blazor.web.ej96puwv3k.js"></script></body></html><!--Blazor-Web-Initializers:Ww0KICAiX2ZyYW1ld29yay9NaWNyb3NvZnQuRG90TmV0LkhvdFJlbG9hZC5XZWJBc3NlbWJseS5Ccm93c2VyLjk5em0xamRoNzUubGliLm1vZHVsZS5qcyINCl0=--><!--Blazor-Server-Component-State:CfDJ8CUzWyiFEvNKpOBaWpUBlRmRbKSOj3tNWtca13DUas3Y7XDyZDsxcK1Rq+Gfz3/VMIqMW5Va7IN0+P0LKHtR10kTBXUEXnOaCiEEo2AyQLE48MPrrrG2DoqN4rSy4mp8IBdQR8xltF9AAmV0uTbIsDVLXlaNjrSJFZaiKXavF+cs6Cuf+Lj8UuPnHEK6dD6q6c5qQAaH8RbrPQ4eNF2cZ5/phkXl4dS7RAdiN5sEjCJAmKgYBQ5tUeNxsvFA/8/XOc3G9Sqnxy23tuwPfxGgEhGfqdzYOh938AaQfhAdwJYZm5hlkpFAZSyqpQ1Gw6MVuxquaFsjFTLb83/55kIDCq579xBSZS+x3apAqUF6poYkdR9JuHfeHtukzkwQv3+uKM4Eur8RBMdrYkMwFBR3/baQ+ofpXpw99Nwt5tvnKGgOiCUDgyY6Zs3AcU87UmtIPFKkzWDzbwhrSNNyVQQxAAMDRLcLWKcg6NN5Gb86R15D33uhVvVRASRGPLZJgMcUxKBdky3oObH82ztdUj+osm5IJtQwj/5ryLrNW2hSBNTJQE2kaLQvt66JKotZ3EnehsbF+B39Y1D6jhceG7tmLKegyeuW1GxF74e0Yn8V8zVrMTIdJvaL2FzzPRBZN3FTVOjCxEV0TeBCHLcflNmp7W1exX2iMdg7MDeWf1Yn71ZhZkkslWQhh/1dARR171Y+F53EDuJX0mqqDOZlivg2yUTsyFG0S8DzWHyTTPFh+afRjDQdNF6aOvH2bIocRDmrUxU6muHNCjmG0X8SS16jolZngHKjrQ/RbqlXI5DB9OiAgQyK7hzElIP3ZxDgS3xMskH+KoO9EPMnfCzPKJnmVn8ge299gETXV8PjBNczUYfBV5hXIix9Q2H6dBCI/PAJ1h1qoF3Gr2HFHVnM4yQh30T0AuLsnHGRun7M762k596Ae+buLqP+66+v3y0iEWT6bjq8SNS4xqbBV94uP0Hl92BROP9/d/uL8VFMdbt1eUPRGZIctMsOKd0AAL3cXsoRwHanwDNs9IwsUA5XoQHKQlakKILc+bfD6ir2pGF1FNdBIV8pmqVT7M0r8aeugtGEgX0i5spKo4ghbQXhOQSALDsmK3m9xNAARt8aCFjVJMyyugqwo6HR7jqKOMiOPYWWJQ==--><!--Blazor-WebAssembly-Component-State:eyJLOVRlM0xEYlx1MDAyQjZ4ZkpDLzBSVDBCR0xRT3ZwWGlQNEtJU2dBa096RG5za0E9IjoiSWk0dlgyWnlZVzFsZDI5eWF5OXlaWE52ZFhKalpTMWpiMnhzWldOMGFXOXVMalpWZDBoTkxtcHpJZz09IiwiTWljcm9zb2Z0LkFzcE5ldENvcmUuQ29tcG9uZW50cy5JbmZyYXN0cnVjdHVyZS5QZXJzaXN0ZW50U2VydmljZXNSZWdpc3RyeSI6Ilczc2lZWE56WlcxaWJIa2lPaUpOYVdOeWIzTnZablF1UVhOd1RtVjBRMjl5WlM1RGIyMXdiMjVsYm5SekxrVnVaSEJ2YVc1MGN5SXNJbVoxYkd4VWVYQmxUbUZ0WlNJNklrMXBZM0p2YzI5bWRDNUJjM0JPWlhSRGIzSmxMa052YlhCdmJtVnVkSE11VW1WemIzVnlZMlZEYjJ4c1pXTjBhVzl1VUhKdmRtbGtaWElpZlN4N0ltRnpjMlZ0WW14NUlqb2lUV2xqY205emIyWjBMa0Z6Y0U1bGRFTnZjbVV1UTI5dGNHOXVaVzUwY3k1WFpXSWlMQ0ptZFd4c1ZIbHdaVTVoYldVaU9pSk5hV055YjNOdlpuUXVRWE53VG1WMFEyOXlaUzVEYjIxd2IyNWxiblJ6TGtadmNtMXpMa0Z1ZEdsbWIzSm5aWEo1VTNSaGRHVlFjbTkyYVdSbGNpSjlYUT09IiwiS1N6dFQ4NGdBaVYwSU8vVUJSUnBPbThLNGpxRWZcdTAwMkIxSnp2Vk9DTUJsc2lVPSI6ImV5SjJZV3gxWlNJNklrTm1SRW80UTFWNlYzbHBSa1YyVGt0d1QwSmhWM0JWUW14U2JqWndNV3BhTjNaWVUycHdZbGRKTkhSdlMwMVpiVkJaY2psak1tVXdRMnhOV205VGJVcHFPWFJ4UWxCaFlUTXdjVVJqVUdaMmRsRmpVbFYyUzA0NVdVOW1jMUJoVVUxZk1WZGhkVWt3ZVV4eE1UZGlRMTlmVFZsMFJDMXFXVlEwTFRkbU5rRTBNMkZtY2tGVWVIbDVaMlpMTms5b1pWRlVTRGxDTVRKYVJtVmpJaXdpWm05eWJVWnBaV3hrVG1GdFpTSTZJbDlmVW1WeGRXVnpkRlpsY21sbWFXTmhkR2x2YmxSdmEyVnVJbjA9In0=-->

@@ -1,0 +1,25 @@
+@* AssetCard: a probe component that mirrors back exactly what it was passed.
+   We use this to observe what value the *caller's* `~/` or `@Assets[...]`
+   expression produced at the call site. *@
+
+<div class="row" style="border:1px dashed #999;padding:8px;margin:6px 0">
+  <strong>AssetCard received:</strong>
+  Source=<code>@(Source ?? "<null>")</code>,
+  Route=<code>@(Route ?? "<null>")</code>,
+  Title=<code>@(Title ?? "<null>")</code>
+  <br />
+  Re-emitted via <code>&lt;img src="@@Source"&gt;</code>:
+  <img src="@Source" alt="from component" />
+  <br />
+  Re-emitted via <code>&lt;a href="@@Route"&gt;</code>:
+  <a href="@Route">link</a>
+  <br />
+  Re-emitted via <code>&lt;div title="@@Title"&gt;</code>:
+  <div title="@Title">hover</div>
+</div>
+
+@code {
+    [Parameter] public string? Source { get; set; }
+    [Parameter] public string? Route { get; set; }
+    [Parameter] public string? Title { get; set; }
+}

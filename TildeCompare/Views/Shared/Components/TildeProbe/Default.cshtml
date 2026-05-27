@@ -1,0 +1,20 @@
+@model TildeCompare.ViewComponents.TildeProbeModel
+@{
+    // Note: 'Model.Source' is just a string. The literal "~/..." passed by the
+    // caller is *not* expanded inside the model — it's only expanded when used
+    // in an attribute that the URL-resolution tag helper targets.
+}
+<div class="row">
+  <strong>ViewComponent received:</strong>
+  Source=<code>@Model.Source</code>,
+  Route=<code>@Model.Route</code>
+  <br />
+  Re-emitted via <code>&lt;img src="@@Model.Source"&gt;</code>:
+  <img src="@Model.Source" alt="from view component" />
+  <br />
+  Re-emitted via <code>&lt;a href="@@Model.Route"&gt;</code>:
+  <a href="@Model.Route">link</a>
+  <br />
+  Re-emitted via <code>Url.Content(@@Model.Route)</code>:
+  <code>@Url.Content(Model.Route)</code>
+</div>

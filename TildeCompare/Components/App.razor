@@ -1,0 +1,27 @@
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor Http
+@{
+    var pathBase = Http.HttpContext?.Request.PathBase.Value;
+    var baseHref = string.IsNullOrEmpty(pathBase) ? "/" : pathBase + "/";
+}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="@baseHref" />
+    <ResourcePreloader />
+    <link rel="stylesheet" href="@Assets["app.css"]" />
+    <link rel="stylesheet" href="@Assets["css/site.css"]" />
+    <link rel="stylesheet" href="@Assets["TildeCompare.styles.css"]" />
+    <ImportMap />
+    <HeadOutlet />
+</head>
+
+<body>
+    <Routes />
+    <ReconnectModal />
+    <script src="@Assets["_framework/blazor.web.js"]"></script>
+</body>
+
+</html>

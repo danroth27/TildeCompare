@@ -1,0 +1,76 @@
+@* Shared scenario grid — included by every Blazor comparison page so the
+   matrix is identical across render modes. Receives a label and renders
+   each scenario twice: with literal "~/..." and with @Assets[...] / route. *@
+
+@inject Microsoft.AspNetCore.Components.NavigationManager Nav
+
+<p>Mode: <span class="label">@Label</span> &nbsp; NavigationManager.BaseUri: <code>@Nav.BaseUri</code></p>
+
+<h2>1. Static asset URLs — same attribute names MVC's allowlist targets</h2>
+
+<h3>1a. <code>&lt;img src="~/images/logo.png"&gt;</code> (literal)</h3>
+<div class="row">Rendered: <img src="~/images/logo.png" alt="literal" /></div>
+
+<h3>1b. <code>&lt;img src="@@Assets["images/logo.png"]"&gt;</code></h3>
+<div class="row">Rendered: <img src="@Assets["images/logo.png"]" alt="Assets" /></div>
+
+<h3>1c. <code>&lt;script src="@@Assets["js/site.js"]"&gt;</code></h3>
+<script src="@Assets["js/site.js"]"></script>
+
+<h3>1d. <code>&lt;source srcset="@@Assets["images/logo.png"] 1x, @@Assets["images/logo-2x.png"] 2x"&gt;</code></h3>
+<div class="row">
+  <picture>
+    <source srcset="@Assets["images/logo.png"] 1x, @Assets["images/logo-2x.png"] 2x" />
+    <img src="@Assets["images/logo.png"]" alt="logo" />
+  </picture>
+</div>
+
+<h3>1e. <code>&lt;form action="~/Submit"&gt;</code> (literal)</h3>
+<form action="~/Submit" method="post"><input type="submit" value="literal-submit" /></form>
+
+<h2>2. Page route targets — Assets[] has no entry for these</h2>
+
+<h3>2a. <code>&lt;a href="~/counter"&gt;</code> (literal — Blazor today)</h3>
+<div class="row"><a href="~/counter">literal href</a></div>
+
+<h3>2b. <code>&lt;a href="counter"&gt;</code> (base-relative — typical Blazor pattern)</h3>
+<div class="row"><a href="counter">base-relative href</a></div>
+
+<h3>2c. <code>&lt;a href="@@Nav.ToAbsoluteUri("counter")"&gt;</code> (programmatic absolute)</h3>
+<div class="row"><a href="@Nav.ToAbsoluteUri("counter")">absolute href</a></div>
+
+<h3>2d. <code>&lt;a href="@@Assets["counter"]"&gt;</code> — what would this do?</h3>
+<div class="row">
+  @{
+    string assetsCounter;
+    try { assetsCounter = Assets["counter"]; }
+    catch (Exception ex) { assetsCounter = $"(threw {ex.GetType().Name}: {ex.Message})"; }
+  }
+  Result: <code>@assetsCounter</code>
+</div>
+
+<h2>3. Non-URL attributes</h2>
+
+<h3>3a. <code>&lt;div title="~/foo"&gt;</code> (literal)</h3>
+<div class="row"><div title="~/foo">hover — title literal</div></div>
+
+<h3>3b. <code>&lt;div data-url="~/foo"&gt;</code> (literal)</h3>
+<div class="row"><div data-url="~/foo">data-url literal</div></div>
+
+<h2>4. Component parameters</h2>
+
+<h3>4a. <code>&lt;AssetCard Source="~/images/logo.png" Route="~/counter" Title="~/foo" /&gt;</code></h3>
+<AssetCard Source="~/images/logo.png" Route="~/counter" Title="~/foo" />
+
+<h3>4b. <code>&lt;AssetCard Source="@@Assets["images/logo.png"]" Route="counter" /&gt;</code></h3>
+<AssetCard Source="@Assets["images/logo.png"]" Route="counter" Title="just a title" />
+
+<h3>4c. <code>&lt;NavLink href="~/counter"&gt;</code> (literal)</h3>
+<div class="row"><NavLink href="~/counter">NavLink literal</NavLink></div>
+
+<h3>4d. <code>&lt;NavLink href="counter"&gt;</code> (base-relative, idiomatic Blazor)</h3>
+<div class="row"><NavLink href="counter">NavLink base-relative</NavLink></div>
+
+@code {
+    [Parameter] public string Label { get; set; } = "";
+}

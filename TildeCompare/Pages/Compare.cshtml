@@ -1,0 +1,74 @@
+@page
+@model TildeCompare.Pages.CompareModel
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>MVC / Razor Pages — ~/ behavior</title>
+  <base href="~/" />
+  <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+  <p><a href="~/">&larr; back</a> | <span class="label">Razor Pages (.cshtml)</span></p>
+  <h1>What <code>~/</code> does in Razor Pages today</h1>
+  <p>App PathBase: <code>@HttpContext.Request.PathBase</code></p>
+
+  <h2>1. Static asset URLs — allowlisted attributes</h2>
+
+  <h3>1a. <code>&lt;img src="~/images/logo.png"&gt;</code></h3>
+  <div class="row">Rendered: <img src="~/images/logo.png" alt="logo" /></div>
+
+  <h3>1b. <code>&lt;link href="~/css/site.css"&gt;</code> (already in head)</h3>
+
+  <h3>1c. <code>&lt;script src="~/js/site.js"&gt;</code></h3>
+  <script src="~/js/site.js"></script>
+
+  <h3>1d. <code>&lt;a href="~/images/logo.png"&gt;</code> (asset target)</h3>
+  <div class="row"><a href="~/images/logo.png">download logo</a></div>
+
+  <h3>1e. <code>&lt;source srcset="~/images/logo.png 1x, ~/images/logo-2x.png 2x"&gt;</code></h3>
+  <div class="row">
+    <picture>
+      <source srcset="~/images/logo.png 1x, ~/images/logo-2x.png 2x" />
+      <img src="~/images/logo.png" alt="logo" />
+    </picture>
+  </div>
+
+  <h3>1f. <code>&lt;form action="~/Submit"&gt;</code></h3>
+  <form action="~/Submit" method="post"><input type="submit" value="submit" /></form>
+
+  <h2>2. Page route targets (no static asset behind them)</h2>
+
+  <h3>2a. <code>&lt;a href="~/counter"&gt;</code></h3>
+  <div class="row"><a href="~/counter">go to /counter</a></div>
+
+  <h3>2b. <code>&lt;a href="~/Compare?x=1"&gt;</code> with query</h3>
+  <div class="row"><a href="~/Compare?x=1">self-link with query</a></div>
+
+  <h2>3. Non-URL attributes (not in tag-helper allowlist)</h2>
+
+  <h3>3a. <code>&lt;div title="~/foo"&gt;</code></h3>
+  <div class="row"><div title="~/foo">hover me — title is literal</div></div>
+
+  <h3>3b. <code>&lt;div data-url="~/foo"&gt;</code></h3>
+  <div class="row"><div data-url="~/foo">data-url attr is literal</div></div>
+
+  <h2>4. Programmatic features</h2>
+
+  <h3>4a. <code>@@Url.Content("~/images/logo.png")</code></h3>
+  <div class="row">Result: <code>@Url.Content("~/images/logo.png")</code></div>
+
+  <h3>4b. <code>@@Url.Content("~/counter")</code> (route target)</h3>
+  <div class="row">Result: <code>@Url.Content("~/counter")</code></div>
+
+  <h3>4c. <code>@@Assets["images/logo.png"]</code> — not a thing in Razor Pages</h3>
+  <div class="row">Razor Pages has no built-in <code>Assets</code> indexer; fingerprinting flows through tag helpers (<code>asp-append-version</code>, link/script tag helpers since 9.0).</div>
+
+  <h3>4d. View Component invocation</h3>
+  <div class="row">@(await Component.InvokeAsync("TildeProbe", new { source = "~/images/logo.png", route = "~/counter" }))</div>
+
+  <h2>5. Partial / shared rendering</h2>
+  <h3>5a. Partial uses <code>~/</code> in <code>&lt;img&gt;</code> and <code>&lt;a&gt;</code></h3>
+  <div class="row"><partial name="_TildePartial" /></div>
+</body>
+</html>

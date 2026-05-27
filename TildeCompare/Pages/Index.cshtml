@@ -1,0 +1,23 @@
+@page
+@model TildeCompare.Pages.IndexModel
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Tilde / Assets comparison</title>
+  <base href="~/" />
+  <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+  <h1>Tilde path expansion — comparison surfaces</h1>
+  <p>Mounted under <code>PathBase = /myapp</code>.</p>
+  <ul>
+    <li><a href="~/Compare">MVC / Razor Pages — <code>~/</code> behavior</a></li>
+    <li><a href="~/blazor/compare-ssr">Blazor static SSR — <code>@@Assets[]</code> vs <code>~/</code></a></li>
+    <li><a href="~/blazor/compare-server">Blazor interactive Server</a></li>
+    <li><a href="~/blazor/compare-wasm">Blazor interactive WebAssembly</a></li>
+    <li><a href="~/counter">Razor Pages /counter (page route target)</a></li>
+    <li><a href="~/blazor/counter">Blazor /counter (page route target)</a></li>
+  </ul>
+</body>
+</html>
