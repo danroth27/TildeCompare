@@ -109,7 +109,8 @@ If we shipped Option A (compile-time `"~/x"` → `Assets["x"]` on any attribute)
 
 1. **MVC's `~/` is already a static, literal-only feature.** A runtime string
    starting with `~/` is never re-resolved — see the View Component row.
-   This *matches* the prototype's compile-time-only semantics, and answers
+   This *matches* the proposed compile-time `~/` → `Assets[...]` rewrite's
+   literal-only semantics, and answers
    the "what about programmatic flow?" worry: MVC has lived with the same
    gap for 15+ years.
 
@@ -136,7 +137,7 @@ If we shipped Option A (compile-time `"~/x"` → `Assets["x"]` on any attribute)
 5. **srcset is a place where `@Assets[]` is actually better than MVC's
    `~/`.** MVC's UrlResolutionTagHelper has a long-standing bug where it
    only resolves the leading `~/` in a `srcset` attribute. The Blazor
-   prototype handles each `~/` independently.
+   proposed `~/` rewrite handles each `~/` independently.
 
 6. **NavLink today is broken with `href="~/x"`.** The literal flows through
    and the browser tries to navigate to `<base href>~/x`, which 404s.
